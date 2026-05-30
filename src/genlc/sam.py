@@ -157,7 +157,7 @@ class BaseDevice:
         msg = GNetMessage(self.address, const.CID_SOFTWARE_QUERY2)
         resp_msg = self.group.transport.send_receive(msg)
 
-        self.software_str = resp_msg.response.rstrip(b"\0").rstrip().decode("utf-8")
+        self.software_str = resp_msg.response.rstrip(b"\0").rstrip().decode("utf-8", errors="replace")
         return self.software_str
 
     def query_hardware(self) -> str:
@@ -166,7 +166,7 @@ class BaseDevice:
         msg = GNetMessage(self.address, const.CID_HARDWARE_QUERY)
         resp_msg = self.group.transport.send_receive(msg)
 
-        hardware_str = resp_msg.response.rstrip(b"\0").decode("utf-8")
+        hardware_str = resp_msg.response.rstrip(b"\0").decode("utf-8", errors="replace")
         self.hardware = tuple(hardware_str.rsplit(" ", 5))
         return self.hardware
 
@@ -176,7 +176,7 @@ class BaseDevice:
         msg = GNetMessage(self.address, const.CID_BAR_CODE, b"\x01")
         resp_msg = self.group.transport.send_receive(msg)
 
-        self.barcode = resp_msg.response.decode("utf-8")
+        self.barcode = resp_msg.response.decode("utf-8", errors="replace")
         return self.barcode
 
 
@@ -194,7 +194,7 @@ class USBAdapter(BaseDevice):
     def query_mic_serial(self) -> None:
         msg = GNetMessage(self.address, const.CID_MIC_SERIAL, b"\x82\x44")
         resp_msg = self.group.transport.send_receive(msg)
-        self.mic_serial = resp_msg.response.decode("utf-8")
+        self.mic_serial = resp_msg.response.decode("utf-8", errors="replace")
         return self.mic_serial
 
     def poll(self) -> dict:
