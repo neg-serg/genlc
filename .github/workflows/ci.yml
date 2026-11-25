@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+# One run per ref: a new push supersedes the previous build.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      # hidapi's sys crate builds against libusb; the udev headers are needed by
+      # hidapi's Linux backend even though the binary only opens /dev/hidraw*.
+      - name: System dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libusb-1.0-0-dev libudev-dev
+
+      - name: Format
+        run: cargo fmt --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Nix flake
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Build with Nix
+        run: nix build .#default
+
+      # The CLI surface against the built package (see flake.nix): no adapter
+      # is opened, so this runs on a machine without a GLM bus.
+      - name: Flake checks
+        run: nix flake check -L

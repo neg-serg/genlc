@@ -1,5 +1,3 @@
-__pycache__
-.coverage
-.python-version
-poetry.lock
-dist/
+/result
+/target
+*.drv

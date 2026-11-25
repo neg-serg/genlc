@@ -1,0 +1,25 @@
+[package]
+name = "genlc"
+version = "0.2.0"
+edition = "2024"
+description = "Genelec SAM loudspeaker control over the GLM USB adapter"
+license = "MIT"
+repository = "https://github.com/neg-serg/genlc"
+homepage = "https://github.com/neg-serg/genlc"
+
+[[bin]]
+name = "genlc"
+path = "src/main.rs"
+
+[lib]
+name = "genlc"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = "1.0.104"
+clap = { version = "4.6.4", features = ["derive"] }
+hidapi = "2.6.6"
+
+# Standalone: its own workspace root, so this Cargo.lock is the one the Nix
+# build uses (`src = ./.` copies this directory).
+[workspace]
