@@ -1,4 +1,7 @@
-// GNet protocol and HID transport — matching Python genlc USB transport
+// GNet protocol and HID transport for the Genelec GLM USB adapter.
+//
+// Framing follows the on-wire protocol (see the qlm protocol notes); nothing
+// here is a port of another implementation's source.
 use anyhow::{Context, Result};
 use hidapi::{HidApi, HidDevice};
 
@@ -49,7 +52,7 @@ impl HidTransport {
         out
     }
 
-    /// Send a GNet message. Matches Python USBTransport.send().
+    /// Send a GNet message as one HID report.
     /// Format: [0x00] [0x80+len] [PPP-stuffed message]
     pub fn send(&self, msg: &GNetMessage) -> Result<()> {
         if let Some(why) = forbidden_reason(msg.address, &msg.payload()) {
@@ -65,8 +68,9 @@ impl HidTransport {
         Ok(())
     }
 
-    /// Read one or more 64-byte HID reports, reassemble, PPP-destuff.
-    /// Matches Python USBTransport._read().
+    /// Reassemble the reply from 64-byte reports: each report starts with its
+    /// payload length (63), the join drops that byte, and the trailing padding is
+    /// stripped before PPP destuffing.
     pub fn receive(&self) -> Result<Vec<u8>> {
         let mut segments: Vec<Vec<u8>> = Vec::new();
         loop {
